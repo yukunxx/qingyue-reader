@@ -8,6 +8,7 @@
 - **书架**：书籍列表（封面、书名、作者、进度、最近阅读时间），按最近阅读排序，可删除
 - **阅读**：固定字数分页（按需 `slice`，大文件不卡顿），字号 / 行距调节，日间 / 护眼 / 夜间三主题
 - **进度记忆**：翻页 / 返回自动记录进度，刷新或下次打开自动恢复
+- **字体**：全站使用阿里巴巴普惠体 3.0（Regular 55），本地打包离线可用
 
 ## 技术栈
 
@@ -41,7 +42,9 @@ src/
   components/
     Shelf/ Reader/ Settings/ Toast/
   styles/
-    global.css / themes.css
+    fonts.css / global.css / themes.css
+  assets/
+    fonts/          # 阿里巴巴普惠体 3.0 Regular TTF（本地打包）
 ```
 
 `demo/index.html` 为交互参考原型；本实现按技术方案将其三处替换：`readAsText` → `ArrayBuffer` + 编码探测、`localStorage` → IndexedDB、预生成 `pages` 数组 → 存原文按需 `slice`。

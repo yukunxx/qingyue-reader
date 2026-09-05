@@ -58,7 +58,7 @@
   width: 100%;
   max-width: 720px;
   padding: 40px 36px 80px;
-  font-family: 'Songti SC', 'Noto Serif SC', 'STSong', 'SimSun', serif;
+  font-family: inherit;
   text-align: justify;
   white-space: pre-wrap;
 }
