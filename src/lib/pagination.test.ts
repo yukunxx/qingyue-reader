@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CHARS_PER_PAGE, pageAt, totalPages } from './pagination';
+import { CHARS_PER_PAGE, pageAt, readingProgress, totalPages } from './pagination';
 
 function repeat(s: string, n: number): string {
   return Array.from({ length: n }, () => s).join('');
@@ -51,5 +51,27 @@ describe('pageAt', () => {
   it('不同页内容正确切片', () => {
     const text = repeat('x', CHARS_PER_PAGE) + 'TAIL';
     expect(pageAt(text, 1)).toBe('TAIL');
+  });
+});
+
+describe('readingProgress', () => {
+  it('未开始（page 为 0）返回 0%', () => {
+    expect(readingProgress(0, 5)).toBe(0);
+  });
+
+  it('负页下标视为未开始返回 0%', () => {
+    expect(readingProgress(-3, 5)).toBe(0);
+  });
+
+  it('第 2 页（下标 1）/ 共 5 页返回 40%', () => {
+    expect(readingProgress(1, 5)).toBe(40);
+  });
+
+  it('最后一页返回 100%', () => {
+    expect(readingProgress(4, 5)).toBe(100);
+  });
+
+  it('单页书未开始返回 0%，不出现除零', () => {
+    expect(readingProgress(0, 1)).toBe(0);
   });
 });

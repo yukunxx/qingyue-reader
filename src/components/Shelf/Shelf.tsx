@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { useBookStore } from '../../store/bookStore';
-import { totalPages } from '../../lib/pagination';
+import { readingProgress, totalPages } from '../../lib/pagination';
 import { toast } from '../Toast/Toast';
 import type { Book } from '../../types';
 import styles from './Shelf.module.css';
@@ -78,8 +78,8 @@ export default function Shelf() {
           <div className={styles.grid}>
             {sorted.map((book) => {
               const total = totalPages(book.content);
-              const pct = Math.round(((book.lastPage + 1) / total) * 100);
               const started = book.lastPage > 0;
+              const pct = readingProgress(book.lastPage, total);
               const cover = COVER_GRADIENTS[Number(book.cover) % COVER_GRADIENTS.length];
               return (
                 <div className={styles.card} key={book.id}>

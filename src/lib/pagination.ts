@@ -14,3 +14,13 @@ export function pageAt(text: string, page: number): string {
   const start = idx * CHARS_PER_PAGE;
   return text.slice(start, start + CHARS_PER_PAGE);
 }
+
+/**
+ * 阅读进度百分比。
+ * 未开始（page <= 0）视为 0%；否则按 (page + 1) / total 计算，
+ * 与阅读器底部进度口径一致。
+ */
+export function readingProgress(page: number, total: number): number {
+  if (page <= 0) return 0;
+  return Math.round(((page + 1) / Math.max(1, total)) * 100);
+}
