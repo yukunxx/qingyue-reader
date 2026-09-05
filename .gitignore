@@ -3,3 +3,6 @@ dist
 .npm-cache
 *.local
 .DS_Store
+
+# 本地导入测试用的文章（非项目文档）
+docs/*.txt
