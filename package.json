@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "轻阅 · TXT 阅读器（MVP）：纯前端、本地存储的 TXT 电子书阅读器",
+  "description": "轻阅 · 电子书阅读器：纯前端、本地存储，支持 TXT 与 EPUB",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",

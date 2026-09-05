@@ -57,7 +57,7 @@ export default function Shelf() {
           <h1>
             <span className={styles.logo}>轻</span>阅
           </h1>
-          <span>TXT 阅读器 · MVP</span>
+          <span>电子书阅读器</span>
         </div>
         <button className={styles.btn} onClick={() => inputRef.current?.click()}>
           ＋ 导入书籍
