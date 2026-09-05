@@ -1,0 +1,73 @@
+.panel {
+  position: absolute;
+  top: 58px;
+  right: 16px;
+  z-index: 20;
+  background: var(--rbar);
+  border: 1px solid var(--rborder);
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  padding: 16px;
+  width: 260px;
+  color: var(--rfg);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.row:last-child {
+  margin-bottom: 0;
+}
+
+.row label {
+  font-size: 13px;
+  color: var(--rmuted);
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.val {
+  font-size: 13px;
+  min-width: 34px;
+  text-align: center;
+}
+
+.btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--rfg);
+}
+
+.btn:hover {
+  background: rgba(127, 127, 127, 0.14);
+}
+
+.dots {
+  display: flex;
+  gap: 8px;
+}
+
+.dot {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+}
+
+.dot.on {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(79, 110, 242, 0.25);
+}
