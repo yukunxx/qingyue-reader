@@ -1,21 +1,33 @@
 import { create } from 'zustand';
-import type { Book, ReaderSettings, Theme } from '../types';
+import type { Book, Bookmark, Highlight, ReaderSettings, Theme } from '../types';
 import { decodeText } from '../lib/encoding';
 import { totalPages } from '../lib/pagination';
 import {
   DEFAULT_SETTINGS,
   deleteBook as dbDeleteBook,
+  deleteBookmark,
+  deleteHighlight,
+  getAllBookmarks,
   getAllBooks,
+  getAllHighlights,
   getSettings,
   putBook,
+  putBookmark,
+  putHighlight,
   putSettings,
 } from '../lib/db';
 
 /** 封面色数量，与实际渐变数组长度保持一致。 */
 export const COVER_COUNT = 5;
 
+function genId(prefix: string): string {
+  return prefix + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+
 interface BookState {
   books: Book[];
+  bookmarks: Bookmark[];
+  highlights: Highlight[];
   currentId: string | null;
   currentPage: number;
   settings: ReaderSettings;
@@ -29,6 +41,10 @@ interface BookState {
   setFontSize: (n: number) => void;
   setLineHeight: (n: number) => void;
   setTheme: (t: Theme) => void;
+  addBookmark: (bookId: string, offset: number) => Promise<void>;
+  removeBookmark: (id: string) => Promise<void>;
+  addHighlight: (bookId: string, start: number, end: number) => Promise<void>;
+  removeHighlight: (id: string) => Promise<void>;
 }
 
 let progressTimer: ReturnType<typeof setTimeout> | null = null;
@@ -60,15 +76,22 @@ function scheduleSettings(settings: ReaderSettings): void {
 
 export const useBookStore = create<BookState>((set, get) => ({
   books: [],
+  bookmarks: [],
+  highlights: [],
   currentId: null,
   currentPage: 0,
   settings: DEFAULT_SETTINGS,
   loaded: false,
 
   loadAll: async () => {
-    const [books, settings] = await Promise.all([getAllBooks(), getSettings()]);
+    const [books, settings, bookmarks, highlights] = await Promise.all([
+      getAllBooks(),
+      getSettings(),
+      getAllBookmarks(),
+      getAllHighlights(),
+    ]);
     books.sort((a, b) => b.lastAt - a.lastAt);
-    set({ books, settings: settings ?? DEFAULT_SETTINGS, loaded: true });
+    set({ books, settings: settings ?? DEFAULT_SETTINGS, bookmarks, highlights, loaded: true });
   },
 
   importFiles: async (files) => {
@@ -83,7 +106,7 @@ export const useBookStore = create<BookState>((set, get) => ({
       if (!text.trim()) continue;
 
       const book: Book = {
-        id: 'b' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+        id: genId('b'),
         title: file.name.replace(/\.txt$/i, ''),
         author: '本地导入',
         content: text,
@@ -109,10 +132,20 @@ export const useBookStore = create<BookState>((set, get) => ({
 
   deleteBook: async (id) => {
     await dbDeleteBook(id);
+    const bms = get().bookmarks.filter((b) => b.bookId === id);
+    const hls = get().highlights.filter((h) => h.bookId === id);
+    if (bms.length || hls.length) {
+      await Promise.all([
+        ...bms.map((b) => deleteBookmark(b.id)),
+        ...hls.map((h) => deleteHighlight(h.id)),
+      ]);
+    }
     set((s) => {
       const isCurrent = s.currentId === id;
       return {
         books: s.books.filter((b) => b.id !== id),
+        bookmarks: s.bookmarks.filter((b) => b.bookId !== id),
+        highlights: s.highlights.filter((h) => h.bookId !== id),
         currentId: isCurrent ? null : s.currentId,
         currentPage: isCurrent ? 0 : s.currentPage,
       };
@@ -173,5 +206,28 @@ export const useBookStore = create<BookState>((set, get) => ({
     const settings = { ...get().settings, theme: t };
     set({ settings });
     scheduleSettings(settings);
+  },
+
+  addBookmark: async (bookId, offset) => {
+    const bookmark: Bookmark = { id: genId('bk'), bookId, offset, createdAt: Date.now() };
+    await putBookmark(bookmark);
+    set((s) => ({ bookmarks: [bookmark, ...s.bookmarks] }));
+  },
+
+  removeBookmark: async (id) => {
+    await deleteBookmark(id);
+    set((s) => ({ bookmarks: s.bookmarks.filter((b) => b.id !== id) }));
+  },
+
+  addHighlight: async (bookId, start, end) => {
+    if (end <= start) return;
+    const highlight: Highlight = { id: genId('hl'), bookId, start, end, createdAt: Date.now() };
+    await putHighlight(highlight);
+    set((s) => ({ highlights: [highlight, ...s.highlights] }));
+  },
+
+  removeHighlight: async (id) => {
+    await deleteHighlight(id);
+    set((s) => ({ highlights: s.highlights.filter((h) => h.id !== id) }));
   },
 }));

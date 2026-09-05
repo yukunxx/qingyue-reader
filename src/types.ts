@@ -23,3 +23,21 @@ export interface ReaderSettings {
   lineHeight: number;
   theme: Theme;
 }
+
+export interface Bookmark {
+  id: string;
+  bookId: string;
+  /** 书签所在字符偏移 */
+  offset: number;
+  createdAt: number;
+}
+
+export interface Highlight {
+  id: string;
+  bookId: string;
+  /** 高亮起始字符偏移（含） */
+  start: number;
+  /** 高亮结束字符偏移（不含） */
+  end: number;
+  createdAt: number;
+}

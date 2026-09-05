@@ -5,6 +5,7 @@
   --rbar: #ffffff;
   --rborder: #e6e8ec;
   --rmuted: #9aa0aa;
+  --rhighlight: rgba(255, 200, 60, 0.35);
 }
 
 .theme-sepia {
@@ -13,6 +14,7 @@
   --rbar: #fdf9ef;
   --rborder: #e8ddc7;
   --rmuted: #a08d74;
+  --rhighlight: rgba(224, 150, 40, 0.35);
 }
 
 .theme-night {
@@ -21,4 +23,5 @@
   --rbar: #202127;
   --rborder: #2d2f36;
   --rmuted: #6b7078;
+  --rhighlight: rgba(110, 125, 210, 0.45);
 }

@@ -2,22 +2,45 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useBookStore } from '../../store/bookStore';
 import { CHARS_PER_PAGE, pageAt, totalPages } from '../../lib/pagination';
 import { chapterIndexAt, parseChapters } from '../../lib/chapters';
+import {
+  bookmarkAtOffset,
+  pageHighlightRanges,
+  splitByHighlightRanges,
+} from '../../lib/annotations';
 import SettingsPanel from '../Settings/SettingsPanel';
+import ReaderNav, { type NavTab } from './ReaderNav';
 import type { Theme } from '../../types';
 import styles from './Reader.module.css';
 
 const THEME_ORDER: Theme[] = ['day', 'sepia', 'night'];
 
+interface Selecting {
+  start: number;
+  end: number;
+  x: number;
+  y: number;
+}
+
 export default function Reader() {
   const book = useBookStore((s) => s.books.find((b) => b.id === s.currentId));
   const currentPage = useBookStore((s) => s.currentPage);
   const settings = useBookStore((s) => s.settings);
+  const bookmarks = useBookStore((s) => s.bookmarks);
+  const highlights = useBookStore((s) => s.highlights);
   const gotoPage = useBookStore((s) => s.gotoPage);
   const closeBook = useBookStore((s) => s.closeBook);
   const setTheme = useBookStore((s) => s.setTheme);
+  const addBookmark = useBookStore((s) => s.addBookmark);
+  const removeBookmark = useBookStore((s) => s.removeBookmark);
+  const addHighlight = useBookStore((s) => s.addHighlight);
+  const removeHighlight = useBookStore((s) => s.removeHighlight);
+
   const [panelOpen, setPanelOpen] = useState(false);
-  const [catalogOpen, setCatalogOpen] = useState(false);
+  const [navOpen, setNavOpen] = useState(false);
+  const [navTab, setNavTab] = useState<NavTab>('catalog');
+  const [selecting, setSelecting] = useState<Selecting | null>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
+  const pageRef = useRef<HTMLDivElement>(null);
 
   // 书籍内容导入后不可变，按 book.id 缓存章节解析，避免翻页时重复扫描全文
   const chapters = useMemo(() => (book ? parseChapters(book.content) : []), [book?.id]);
@@ -45,9 +68,17 @@ export default function Reader() {
 
   if (!book) return null;
 
-  const currentOffset = currentPage * CHARS_PER_PAGE;
+  const pageStart = currentPage * CHARS_PER_PAGE;
+  const currentOffset = pageStart;
   const currentChapterIndex = chapterIndexAt(chapters, currentOffset);
   const currentChapterTitle = currentChapterIndex >= 0 ? chapters[currentChapterIndex].title : '';
+
+  const bookBookmarks = bookmarks.filter((b) => b.bookId === book.id);
+  const bookHighlights = highlights.filter((h) => h.bookId === book.id);
+  const currentBookmark = bookmarkAtOffset(bookBookmarks, currentOffset);
+
+  const ranges = pageHighlightRanges(bookHighlights, pageStart, pageText.length);
+  const segments = splitByHighlightRanges(pageText, ranges);
 
   function goToChapter(idx: number) {
     const ch = chapters[idx];
@@ -65,6 +96,47 @@ export default function Reader() {
     }
   }
 
+  const toggleBookmark = () => {
+    if (currentBookmark) removeBookmark(currentBookmark.id);
+    else addBookmark(book.id, currentOffset);
+  };
+
+  function handleSelectionEnd() {
+    const root = pageRef.current;
+    if (!root) return;
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0 || sel.isCollapsed) {
+      setSelecting(null);
+      return;
+    }
+    const range = sel.getRangeAt(0);
+    if (!root.contains(range.startContainer) || !root.contains(range.endContainer)) {
+      setSelecting(null);
+      return;
+    }
+    const pre = range.cloneRange();
+    pre.selectNodeContents(root);
+    pre.setEnd(range.startContainer, range.startOffset);
+    const start = pre.toString().length;
+    const full = range.cloneRange();
+    full.selectNodeContents(root);
+    full.setEnd(range.endContainer, range.endOffset);
+    const end = full.toString().length;
+    if (end <= start) {
+      setSelecting(null);
+      return;
+    }
+    const rect = range.getBoundingClientRect();
+    setSelecting({ start, end, x: rect.left + rect.width / 2, y: rect.top });
+  }
+
+  const confirmHighlight = () => {
+    if (!selecting) return;
+    addHighlight(book.id, pageStart + selecting.start, pageStart + selecting.end);
+    window.getSelection()?.removeAllRanges();
+    setSelecting(null);
+  };
+
   function cycleTheme() {
     const i = THEME_ORDER.indexOf(settings.theme);
     setTheme(THEME_ORDER[(i + 1) % THEME_ORDER.length]);
@@ -79,15 +151,20 @@ export default function Reader() {
           ←
         </button>
         <span className={styles.title}>{book.title}</span>
-        {chapters.length > 0 && (
-          <button
-            className={styles.iconBtn}
-            onClick={() => setCatalogOpen((v) => !v)}
-            title="目录"
-          >
-            ☰
-          </button>
-        )}
+        <button
+          className={currentBookmark ? `${styles.iconBtn} ${styles.iconBtnOn}` : styles.iconBtn}
+          onClick={toggleBookmark}
+          title={currentBookmark ? '取消书签' : '添加书签'}
+        >
+          🔖
+        </button>
+        <button
+          className={styles.iconBtn}
+          onClick={() => setNavOpen((v) => !v)}
+          title="目录 / 书签 / 高亮"
+        >
+          ☰
+        </button>
         <button className={styles.iconBtn} onClick={cycleTheme} title="切换主题">
           ◐
         </button>
@@ -122,43 +199,45 @@ export default function Reader() {
 
       {panelOpen && <SettingsPanel />}
 
-      {catalogOpen && chapters.length > 0 && (
-        <div className={styles.catalog}>
-          <div className={styles.catalogHeader}>
-            <span>目录（{chapters.length} 章）</span>
-            <button className={styles.iconBtn} onClick={() => setCatalogOpen(false)}>
-              ×
-            </button>
-          </div>
-          <div className={styles.catalogList}>
-            {chapters.map((ch, i) => (
-              <button
-                key={`${ch.start}-${i}`}
-                className={
-                  i === currentChapterIndex
-                    ? `${styles.catalogItem} ${styles.catalogItemOn}`
-                    : styles.catalogItem
-                }
-                onClick={() => {
-                  goToChapter(i);
-                  setCatalogOpen(false);
-                }}
-              >
-                {ch.title}
-              </button>
-            ))}
-          </div>
-        </div>
+      {navOpen && (
+        <ReaderNav
+          tab={navTab}
+          onTabChange={setNavTab}
+          onClose={() => setNavOpen(false)}
+          chapters={chapters}
+          currentChapterIndex={currentChapterIndex}
+          bookmarks={bookBookmarks}
+          highlights={bookHighlights}
+          bookContent={book.content}
+          onJumpToOffset={(offset) => gotoPage(Math.floor(offset / CHARS_PER_PAGE))}
+          onRemoveBookmark={removeBookmark}
+          onRemoveHighlight={removeHighlight}
+        />
       )}
 
       <div className={styles.body} ref={bodyRef}>
         <div
+          ref={pageRef}
           className={styles.page}
           style={{ fontSize: settings.fontSize + 'px', lineHeight: settings.lineHeight }}
+          onMouseUp={handleSelectionEnd}
         >
-          {pageText}
+          {segments.map((seg, i) =>
+            seg.highlighted ? <mark key={i}>{seg.text}</mark> : seg.text,
+          )}
         </div>
       </div>
+
+      {selecting && (
+        <button
+          className={styles.highlightBtn}
+          style={{ left: selecting.x, top: selecting.y }}
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={confirmHighlight}
+        >
+          划线
+        </button>
+      )}
 
       <div className={styles.bottom}>
         <div className={styles.pager}>

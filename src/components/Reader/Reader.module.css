@@ -185,3 +185,119 @@
 .slider {
   flex: 1;
 }
+
+.iconBtnOn {
+  color: var(--accent);
+  background: rgba(79, 110, 242, 0.12);
+}
+
+.navTabs {
+  display: flex;
+  gap: 6px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--rborder);
+}
+
+.navTab {
+  flex: 1;
+  padding: 6px 0;
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--rmuted);
+  transition: 0.12s;
+}
+
+.navTab:hover {
+  color: var(--rfg);
+  background: rgba(127, 127, 127, 0.1);
+}
+
+.navTabOn {
+  color: #fff;
+  background: var(--accent);
+  font-weight: 600;
+}
+
+.navTabOn:hover {
+  color: #fff;
+  background: var(--accent-strong);
+}
+
+.navEmpty {
+  padding: 24px 12px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--rmuted);
+}
+
+.annotItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.annotMain {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--rfg);
+  overflow: hidden;
+}
+
+.annotMain:hover {
+  background: rgba(127, 127, 127, 0.12);
+}
+
+.annotLabel {
+  display: block;
+  font-size: 13px;
+  color: var(--rmuted);
+}
+
+.annotSnippet {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.annotDel {
+  width: 28px;
+  height: 28px;
+  flex: none;
+  border-radius: 7px;
+  color: var(--rmuted);
+  font-size: 16px;
+  transition: 0.12s;
+}
+
+.annotDel:hover {
+  background: rgba(229, 72, 77, 0.15);
+  color: #e5484d;
+}
+
+.page mark {
+  background: var(--rhighlight);
+  color: inherit;
+  border-radius: 2px;
+}
+
+.highlightBtn {
+  position: fixed;
+  transform: translate(-50%, -110%);
+  padding: 6px 14px;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: var(--shadow-lg);
+  z-index: 30;
+}
+
+.highlightBtn:hover {
+  background: var(--accent-strong);
+}
