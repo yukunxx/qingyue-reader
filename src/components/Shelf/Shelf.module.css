@@ -124,6 +124,12 @@
   margin-top: 4px;
 }
 
+.readTime {
+  color: var(--text-2);
+  font-size: 11px;
+  margin-top: 4px;
+}
+
 .progress {
   margin-top: 10px;
 }

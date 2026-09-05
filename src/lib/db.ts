@@ -1,8 +1,8 @@
 import { openDB, type IDBPDatabase, type DBSchema } from 'idb';
-import type { Book, Bookmark, Highlight, ReaderSettings } from '../types';
+import type { Book, Bookmark, Highlight, ReaderSettings, ReadingStat } from '../types';
 
 export const DB_NAME = 'qingyue-db';
-export const DB_VERSION = 2;
+export const DB_VERSION = 3;
 export const SETTINGS_KEY = 'reader';
 
 export const DEFAULT_SETTINGS: ReaderSettings = {
@@ -32,6 +32,10 @@ interface QingyueDB extends DBSchema {
     key: string;
     value: Highlight;
   };
+  stats: {
+    key: string;
+    value: ReadingStat;
+  };
 }
 
 let dbPromise: Promise<IDBPDatabase<QingyueDB>> | null = null;
@@ -51,6 +55,9 @@ function getDB(): Promise<IDBPDatabase<QingyueDB>> {
         }
         if (!db.objectStoreNames.contains('highlights')) {
           db.createObjectStore('highlights', { keyPath: 'id' });
+        }
+        if (!db.objectStoreNames.contains('stats')) {
+          db.createObjectStore('stats', { keyPath: 'bookId' });
         }
       },
     });
@@ -113,4 +120,19 @@ export async function putHighlight(highlight: Highlight): Promise<void> {
 export async function deleteHighlight(id: string): Promise<void> {
   const db = await getDB();
   await db.delete('highlights', id);
+}
+
+export async function getAllStats(): Promise<ReadingStat[]> {
+  const db = await getDB();
+  return db.getAll('stats');
+}
+
+export async function putStat(stat: ReadingStat): Promise<void> {
+  const db = await getDB();
+  await db.put('stats', stat);
+}
+
+export async function deleteStat(bookId: string): Promise<void> {
+  const db = await getDB();
+  await db.delete('stats', bookId);
 }

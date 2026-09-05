@@ -7,14 +7,17 @@ import {
   deleteBook as dbDeleteBook,
   deleteBookmark,
   deleteHighlight,
+  deleteStat,
   getAllBookmarks,
   getAllBooks,
   getAllHighlights,
+  getAllStats,
   getSettings,
   putBook,
   putBookmark,
   putHighlight,
   putSettings,
+  putStat,
 } from '../lib/db';
 
 /** 封面色数量，与实际渐变数组长度保持一致。 */
@@ -28,6 +31,8 @@ interface BookState {
   books: Book[];
   bookmarks: Bookmark[];
   highlights: Highlight[];
+  /** bookId → 累计阅读秒数 */
+  stats: Record<string, number>;
   currentId: string | null;
   currentPage: number;
   settings: ReaderSettings;
@@ -45,6 +50,7 @@ interface BookState {
   removeBookmark: (id: string) => Promise<void>;
   addHighlight: (bookId: string, start: number, end: number) => Promise<void>;
   removeHighlight: (id: string) => Promise<void>;
+  addReadingTime: (bookId: string, seconds: number) => Promise<void>;
 }
 
 let progressTimer: ReturnType<typeof setTimeout> | null = null;
@@ -78,20 +84,24 @@ export const useBookStore = create<BookState>((set, get) => ({
   books: [],
   bookmarks: [],
   highlights: [],
+  stats: {},
   currentId: null,
   currentPage: 0,
   settings: DEFAULT_SETTINGS,
   loaded: false,
 
   loadAll: async () => {
-    const [books, settings, bookmarks, highlights] = await Promise.all([
+    const [books, settings, bookmarks, highlights, stats] = await Promise.all([
       getAllBooks(),
       getSettings(),
       getAllBookmarks(),
       getAllHighlights(),
+      getAllStats(),
     ]);
     books.sort((a, b) => b.lastAt - a.lastAt);
-    set({ books, settings: settings ?? DEFAULT_SETTINGS, bookmarks, highlights, loaded: true });
+    const statsMap: Record<string, number> = {};
+    for (const s of stats) statsMap[s.bookId] = s.seconds;
+    set({ books, settings: settings ?? DEFAULT_SETTINGS, bookmarks, highlights, stats: statsMap, loaded: true });
   },
 
   importFiles: async (files) => {
@@ -132,6 +142,7 @@ export const useBookStore = create<BookState>((set, get) => ({
 
   deleteBook: async (id) => {
     await dbDeleteBook(id);
+    await deleteStat(id);
     const bms = get().bookmarks.filter((b) => b.bookId === id);
     const hls = get().highlights.filter((h) => h.bookId === id);
     if (bms.length || hls.length) {
@@ -142,10 +153,13 @@ export const useBookStore = create<BookState>((set, get) => ({
     }
     set((s) => {
       const isCurrent = s.currentId === id;
+      const stats = { ...s.stats };
+      delete stats[id];
       return {
         books: s.books.filter((b) => b.id !== id),
         bookmarks: s.bookmarks.filter((b) => b.bookId !== id),
         highlights: s.highlights.filter((h) => h.bookId !== id),
+        stats,
         currentId: isCurrent ? null : s.currentId,
         currentPage: isCurrent ? 0 : s.currentPage,
       };
@@ -229,5 +243,12 @@ export const useBookStore = create<BookState>((set, get) => ({
   removeHighlight: async (id) => {
     await deleteHighlight(id);
     set((s) => ({ highlights: s.highlights.filter((h) => h.id !== id) }));
+  },
+
+  addReadingTime: async (bookId, seconds) => {
+    if (seconds <= 0) return;
+    const next = (get().stats[bookId] ?? 0) + Math.floor(seconds);
+    set((s) => ({ stats: { ...s.stats, [bookId]: next } }));
+    await putStat({ bookId, seconds: next });
   },
 }));

@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import { useBookStore } from '../../store/bookStore';
 import { readingProgress, totalPages } from '../../lib/pagination';
+import { formatDuration } from '../../lib/duration';
 import { toast } from '../Toast/Toast';
 import type { Book } from '../../types';
 import styles from './Shelf.module.css';
@@ -25,6 +26,7 @@ function fmtTime(ts: number): string {
 
 export default function Shelf() {
   const books = useBookStore((s) => s.books);
+  const stats = useBookStore((s) => s.stats);
   const importFiles = useBookStore((s) => s.importFiles);
   const deleteBook = useBookStore((s) => s.deleteBook);
   const openBook = useBookStore((s) => s.openBook);
@@ -100,6 +102,7 @@ export default function Shelf() {
                   <div className={styles.info}>
                     <div className={styles.title}>{book.title}</div>
                     <div className={styles.author}>{book.author}</div>
+                    <div className={styles.readTime}>累计阅读 {formatDuration(stats[book.id] ?? 0)}</div>
                     <div className={styles.progress}>
                       <div className={styles.bar}>
                         <i style={{ width: pct + '%' }} />

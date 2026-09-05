@@ -41,3 +41,9 @@ export interface Highlight {
   end: number;
   createdAt: number;
 }
+
+export interface ReadingStat {
+  bookId: string;
+  /** 累计阅读秒数 */
+  seconds: number;
+}

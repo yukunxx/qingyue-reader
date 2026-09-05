@@ -35,6 +35,7 @@ export default function Reader() {
   const removeBookmark = useBookStore((s) => s.removeBookmark);
   const addHighlight = useBookStore((s) => s.addHighlight);
   const removeHighlight = useBookStore((s) => s.removeHighlight);
+  const addReadingTime = useBookStore((s) => s.addReadingTime);
 
   const [panelOpen, setPanelOpen] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
@@ -67,6 +68,24 @@ export default function Reader() {
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [currentPage, gotoPage]);
+
+  // 阅读时长：打开阅读器期间按 15s 间隔累计，关闭时结算剩余时长
+  useEffect(() => {
+    if (!book) return;
+    const bookId = book.id;
+    let lastReport = Date.now();
+    const timer = setInterval(() => {
+      const now = Date.now();
+      const elapsed = Math.floor((now - lastReport) / 1000);
+      if (elapsed > 0) addReadingTime(bookId, elapsed);
+      lastReport = now;
+    }, 15000);
+    return () => {
+      clearInterval(timer);
+      const elapsed = Math.floor((Date.now() - lastReport) / 1000);
+      if (elapsed > 0) addReadingTime(bookId, elapsed);
+    };
+  }, [book?.id, addReadingTime]);
 
   if (!book) return null;
 
