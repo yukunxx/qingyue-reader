@@ -45,8 +45,11 @@ export default function Reader() {
   const bodyRef = useRef<HTMLDivElement>(null);
   const pageRef = useRef<HTMLDivElement>(null);
 
-  // 书籍内容导入后不可变，按 book.id 缓存章节解析，避免翻页时重复扫描全文
-  const chapters = useMemo(() => (book ? parseChapters(book.content) : []), [book?.id]);
+  // 书籍内容导入后不可变，按 book.id 缓存章节（EPUB 用显式章节，TXT 用正则识别）
+  const chapters = useMemo(
+    () => (book ? (book.chapters ?? parseChapters(book.content)) : []),
+    [book?.id],
+  );
 
   const total = book ? totalPages(book.content) : 1;
   const pageText = book ? pageAt(book.content, currentPage) : '';

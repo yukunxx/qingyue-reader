@@ -2,6 +2,13 @@ export type Encoding = 'utf-8' | 'utf-16le' | 'utf-16be' | 'gb18030';
 
 export type Theme = 'day' | 'sepia' | 'night';
 
+export interface Chapter {
+  /** 章节标题 */
+  title: string;
+  /** 章节在正文中的字符偏移 */
+  start: number;
+}
+
 export interface Book {
   id: string;
   title: string;
@@ -16,6 +23,8 @@ export interface Book {
   lastAt: number;
   /** 阅读进度（页下标） */
   lastPage: number;
+  /** 显式章节（EPUB 等结构化来源）；TXT 未设置时由正则识别 */
+  chapters?: Chapter[];
 }
 
 export interface ReaderSettings {

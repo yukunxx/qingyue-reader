@@ -22,7 +22,7 @@ export default function App() {
       e.preventDefault();
       if (e.dataTransfer && e.dataTransfer.files.length) {
         importFiles(e.dataTransfer.files).then((n) => {
-          if (n === 0) toast('仅支持非空 .txt 文本文件');
+          if (n === 0) toast('仅支持非空 .txt / .epub 文件');
           else toast('已导入 ' + n + ' 本书');
         });
       }

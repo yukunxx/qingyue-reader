@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { Book, Bookmark, Highlight, ReaderSettings, Theme } from '../types';
 import { decodeText } from '../lib/encoding';
+import { parseEpub } from '../lib/epub';
 import { totalPages } from '../lib/pagination';
 import {
   DEFAULT_SETTINGS,
@@ -106,16 +107,45 @@ export const useBookStore = create<BookState>((set, get) => ({
 
   importFiles: async (files) => {
     const list = Array.from(files).filter(
-      (f) => /\.txt$/i.test(f.name) || f.type === 'text/plain',
+      (f) =>
+        /\.(txt|epub)$/i.test(f.name) ||
+        f.type === 'text/plain' ||
+        f.type === 'application/epub+zip',
     );
     const newBooks: Book[] = [];
 
     for (const file of list) {
       const bytes = new Uint8Array(await file.arrayBuffer());
+      const isEpub = /\.epub$/i.test(file.name) || file.type === 'application/epub+zip';
+
+      if (isEpub) {
+        let epub;
+        try {
+          epub = parseEpub(bytes);
+        } catch {
+          continue; // 解析失败跳过
+        }
+        if (!epub.content.trim()) continue;
+        newBooks.push({
+          id: genId('b'),
+          title: epub.title || file.name.replace(/\.epub$/i, ''),
+          author: epub.author,
+          content: epub.content,
+          chapters: epub.chapters,
+          size: file.size,
+          encoding: 'utf-8',
+          cover: String(Math.floor(Math.random() * COVER_COUNT)),
+          createdAt: Date.now(),
+          lastAt: Date.now(),
+          lastPage: 0,
+        });
+        continue;
+      }
+
       const { text, encoding } = decodeText(bytes);
       if (!text.trim()) continue;
 
-      const book: Book = {
+      newBooks.push({
         id: genId('b'),
         title: file.name.replace(/\.txt$/i, ''),
         author: '本地导入',
@@ -126,8 +156,7 @@ export const useBookStore = create<BookState>((set, get) => ({
         createdAt: Date.now(),
         lastAt: Date.now(),
         lastPage: 0,
-      };
-      newBooks.push(book);
+      });
     }
 
     if (newBooks.length > 0) {

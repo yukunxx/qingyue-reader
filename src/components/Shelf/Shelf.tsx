@@ -37,7 +37,7 @@ export default function Shelf() {
     if (!input || !input.files || input.files.length === 0) return;
     const n = await importFiles(input.files);
     input.value = '';
-    if (n === 0) toast('仅支持非空 .txt 文本文件');
+    if (n === 0) toast('仅支持非空 .txt / .epub 文件');
     else toast('已导入 ' + n + ' 本书');
   }
 
@@ -74,7 +74,7 @@ export default function Shelf() {
           <div className={styles.empty}>
             <div className={styles.ico}>📚</div>
             <h3>书架空空如也</h3>
-            <p>点击右上角「导入书籍」，或把 .txt 文件拖进来</p>
+            <p>点击右上角「导入书籍」，或把 .txt / .epub 文件拖进来</p>
           </div>
         ) : (
           <div className={styles.grid}>
@@ -128,7 +128,7 @@ export default function Shelf() {
       <input
         ref={inputRef}
         type="file"
-        accept=".txt,text/plain"
+        accept=".txt,.epub,text/plain,application/epub+zip"
         multiple
         style={{ display: 'none' }}
         onChange={onImport}

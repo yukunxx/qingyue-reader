@@ -1,9 +1,4 @@
-export interface Chapter {
-  /** 章节标题（含「第X章 xxx」等原始文本，已去首尾空白） */
-  title: string;
-  /** 章节标题在原文中的字符偏移量 */
-  start: number;
-}
+import type { Chapter } from '../types';
 
 /** 匹配「第X章」/「序章」/「楔子」/「番外」等行首章节标题。 */
 const CHAPTER_HEADING_RE =

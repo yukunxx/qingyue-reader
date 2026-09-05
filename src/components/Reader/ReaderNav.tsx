@@ -1,5 +1,4 @@
-import type { Bookmark, Highlight } from '../../types';
-import type { Chapter } from '../../lib/chapters';
+import type { Bookmark, Chapter, Highlight } from '../../types';
 import { CHARS_PER_PAGE } from '../../lib/pagination';
 import styles from './Reader.module.css';
 
