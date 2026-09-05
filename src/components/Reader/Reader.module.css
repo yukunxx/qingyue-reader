@@ -301,3 +301,70 @@
 .highlightBtn:hover {
   background: var(--accent-strong);
 }
+
+.searchPanel {
+  position: absolute;
+  top: 52px;
+  right: 16px;
+  width: 340px;
+  max-width: 90%;
+  max-height: 70%;
+  background: var(--rbar);
+  border: 1px solid var(--rborder);
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: var(--rfg);
+}
+
+.searchHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--rborder);
+}
+
+.searchInput {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--rborder);
+  border-radius: 8px;
+  font-size: 14px;
+  background: var(--rbg);
+  color: var(--rfg);
+  outline: none;
+  font-family: inherit;
+}
+
+.searchInput:focus {
+  border-color: var(--accent);
+}
+
+.searchResults {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.searchItem {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border-bottom: 1px solid var(--rborder);
+  transition: 0.12s;
+}
+
+.searchItem:hover {
+  background: rgba(127, 127, 127, 0.12);
+}
+
+.searchItem:last-child {
+  border-bottom: none;
+}

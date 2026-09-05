@@ -9,6 +9,7 @@ import {
 } from '../../lib/annotations';
 import SettingsPanel from '../Settings/SettingsPanel';
 import ReaderNav, { type NavTab } from './ReaderNav';
+import SearchPanel from './SearchPanel';
 import type { Theme } from '../../types';
 import styles from './Reader.module.css';
 
@@ -37,6 +38,7 @@ export default function Reader() {
 
   const [panelOpen, setPanelOpen] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [navTab, setNavTab] = useState<NavTab>('catalog');
   const [selecting, setSelecting] = useState<Selecting | null>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
@@ -160,7 +162,22 @@ export default function Reader() {
         </button>
         <button
           className={styles.iconBtn}
-          onClick={() => setNavOpen((v) => !v)}
+          onClick={() => {
+            setSearchOpen((v) => !v);
+            setPanelOpen(false);
+            setNavOpen(false);
+          }}
+          title="全文搜索"
+        >
+          🔍
+        </button>
+        <button
+          className={styles.iconBtn}
+          onClick={() => {
+            setNavOpen((v) => !v);
+            setPanelOpen(false);
+            setSearchOpen(false);
+          }}
           title="目录 / 书签 / 高亮"
         >
           ☰
@@ -170,7 +187,11 @@ export default function Reader() {
         </button>
         <button
           className={styles.iconBtn}
-          onClick={() => setPanelOpen((v) => !v)}
+          onClick={() => {
+            setPanelOpen((v) => !v);
+            setNavOpen(false);
+            setSearchOpen(false);
+          }}
           title="阅读设置"
         >
           Aa
@@ -198,6 +219,14 @@ export default function Reader() {
       )}
 
       {panelOpen && <SettingsPanel />}
+
+      {searchOpen && (
+        <SearchPanel
+          content={book.content}
+          onJump={(offset) => gotoPage(Math.floor(offset / CHARS_PER_PAGE))}
+          onClose={() => setSearchOpen(false)}
+        />
+      )}
 
       {navOpen && (
         <ReaderNav
